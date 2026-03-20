@@ -2,33 +2,72 @@
 
 ## 📌 Project Overview
 
-This project demonstrates basic network scanning and service detection using Kali Linux and Nmap.
+This project demonstrates basic network scanning and service detection using Kali Linux and Nmap in a VMware lab environment.
+
+The objective is to identify open ports, detect running services, and understand potential attack surfaces.
 
 ---
 
 ## 🖥️ Lab Setup
 
-* Kali Linux (Attacker)
-* Ubuntu Desktop (Target)
+* **Attacker Machine:** Kali Linux
+* **Target Machine:** Ubuntu Desktop
+* **Platform:** VMware Workstation
+* **Network Type:** Host-only (isolated network)
+
+---
+
+## 🌐 Network Configuration
+
+* Kali Linux IP: 192.168.38.x
+* Target IP: 192.168.38.129
+
+Both machines are connected to the same internal network.
+
+---
+
+## 🔧 Tools Used
+
+* Nmap
+* Kali Linux
+* Apache2 (on target)
 * VMware Workstation
-* Host-only network
 
 ---
 
 ## 🔍 Methodology
 
-* Ping test to verify connectivity
-* Nmap scan to detect open ports
-* Service detection using -sV
-* Access web server via browser
+1. Verified connectivity using `ping`
+2. Performed initial scan using Nmap
+3. Identified open ports and services
+4. Ran advanced scan using `-sC -sV`
+5. Accessed the web service through a browser
+6. Documented findings
 
 ---
 
 ## 📊 Results
 
-* Port 80 (HTTP) open
-* Apache 2.4.58 running
-* Web server accessible
+The Nmap scan revealed:
+
+* **Port 80 (HTTP)** — Open
+* **Service:** Apache HTTP Server 2.4.58 (Ubuntu)
+
+The Apache default page was successfully accessed from the Kali machine, confirming that the service is reachable.
+
+---
+
+## 🔍 Analysis
+
+The presence of an open HTTP port indicates that the target system is running a web server.
+
+Exposed services increase the attack surface and may be vulnerable to:
+
+* Web application attacks
+* Misconfigurations
+* Outdated software
+
+Even a default Apache configuration can reveal useful information to an attacker.
 
 ---
 
@@ -36,22 +75,32 @@ This project demonstrates basic network scanning and service detection using Kal
 
 ### Ping Test
 
+![Ping](Screenshots/ping.png)
+
 ### Nmap Scan
 
-### Advanced Scan
+![Nmap](Screenshots/nmap-open-port.png)
 
-### Apache Page
+### Advanced Scan (-sC -sV)
+
+![Advanced Scan](Screenshots/nmap-advanced.png)
+
+### Apache Web Page
+
+![Apache Page](Screenshots/apache-page.png)
 
 ---
 
 ## 📚 What I Learned
 
-* Network scanning basics
-* Identifying open ports
+* How to set up a cybersecurity lab in VMware
+* Basics of network scanning with Nmap
+* How to identify open ports and services
 * Understanding attack surfaces
+* Importance of service exposure
 
 ---
 
 ## ⚠️ Disclaimer
 
-This project was done in a controlled lab environment.
+This project was conducted in a controlled virtual lab environment for educational purposes only.
