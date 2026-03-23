@@ -2,100 +2,176 @@
 
 ## 📌 Project Overview
 
-This project demonstrates basic network scanning and service detection using Kali Linux and Nmap in a VMware lab environment.
+This project demonstrates a complete cybersecurity workflow including network scanning, web enumeration, and system hardening using a controlled VMware lab environment.
 
-The objective is to identify open ports, detect running services, and understand potential attack surfaces.
+The objective is to identify open services, assess potential vulnerabilities, and apply security improvements to reduce the attack surface.
 
 ---
 
 ## 🖥️ Lab Setup
 
-- **Attacker Machine:** Kali Linux
-- **Target Machine:** Ubuntu Desktop
-- **Platform:** VMware Workstation
-- **Network Type:** Host-only (isolated network)
+- **Attacker Machine:** Kali Linux  
+- **Target Machine:** Ubuntu Desktop  
+- **Platform:** VMware Workstation  
+- **Network Type:** Host-only (isolated lab)  
 
 ---
 
 ## 🌐 Network Configuration
 
-- Kali Linux IP: 192.168.38.131
-- Target IP: 192.168.38.129
+- Kali Linux IP: 192.168.38.131  
+- Target IP: 192.168.38.129  
 
-Both machines are connected to the same internal network.
+Both systems are connected within the same internal network.
 
 ---
 
 ## 🔧 Tools Used
 
-- Nmap
-- Kali Linux
-- Apache2 (on target)
-- VMware Workstation
+- Nmap  
+- WhatWeb  
+- Nikto  
+- Gobuster  
+- Apache2  
+- UFW (Firewall)  
+- Kali Linux  
 
 ---
 
-## 🔍 Methodology
+# 🔍 Phase 1: Network Scanning
 
-1. Verified connectivity using `ping`
-2. Performed initial scan using Nmap
-3. Identified open ports and services
-4. Ran advanced scan using `-sC -sV`
-5. Accessed the web service through a browser
-6. Documented findings
+## 🧠 Objective
+Identify active hosts, open ports, and running services.
 
----
+## 🛠️ Actions Performed
+- Verified connectivity using `ping`
+- Performed Nmap scan
+- Used `-sC -sV` for service detection
 
 ## 📊 Results
+- Port **80 (HTTP)** is open
+- Service: **Apache HTTP Server 2.4.58 (Ubuntu)**
 
-The Nmap scan revealed:
+## 📸 Screenshots
 
-- **Port 80 (HTTP)** — Open
-- **Service:** Apache HTTP Server 2.4.58 (Ubuntu)
+### Ping Test
+![Ping](screenshots/phase1-scanning/ping.png)
 
-The Apache default page was successfully accessed from the Kali machine, confirming that the service is reachable.
+### Nmap Scan
+![Nmap](screenshots/phase1-scanning/nmap-open-port.png)
+
+### Advanced Scan (-sC -sV)
+![Advanced Scan](screenshots/phase1-scanning/nmap-advanced.png)
+
+### Apache Web Page
+![Apache](screenshots/phase1-scanning/apache-page.png)
 
 ---
 
-## 🔍 Analysis
+# 🔍 Phase 2: Web Enumeration
 
-The presence of an open HTTP port indicates that the target system is running a web server.
+## 🧠 Objective
+Analyze the discovered web service for vulnerabilities and hidden resources.
 
-Exposed services increase the attack surface and may be vulnerable to:
-- Web application attacks
-- Misconfigurations
-- Outdated software
+## 🛠️ Tools Used
+- WhatWeb
+- Nikto
+- Gobuster
 
-Even a default Apache configuration can reveal useful information to an attacker.
+## 🔎 Findings
+
+- Apache version information is exposed  
+- Default Apache page is accessible  
+- Missing security headers (X-Frame-Options, X-Content-Type-Options)  
+- Potential information leakage via ETags  
+- Limited directory exposure, but default resources are present  
+
+## 📸 Screenshots
+
+### WhatWeb Scan
+![WhatWeb](screenshots/phase2-enumeration/whatweb_scan.png)
+
+### Nikto Scan
+![Nikto](screenshots/phase2-enumeration/nikto_scan.png)
+
+### Gobuster Scan
+![Gobuster](screenshots/phase2-enumeration/gobuster_scan.png)
+
+---
+
+# 🔐 Phase 3: System Hardening
+
+## 🧠 Objective
+Apply security measures to reduce attack surface and improve system security.
+
+## 🛠️ Actions Performed
+
+### 1. Apache Hardening
+- Disabled version disclosure:
+  - `ServerTokens Prod`
+  - `ServerSignature Off`
+
+### 2. Removed Default Page
+- Deleted `/var/www/html/index.html`
+
+### 3. Firewall Configuration
+- Enabled UFW
+- Allowed only:
+  - Port 22 (SSH)
+  - Port 80 (HTTP)
+
+### 4. System Update
+- Updated packages to patch vulnerabilities
 
 ---
 
 ## 📸 Screenshots
 
-### Ping Test
-![Ping](Screenshots/ping.png)
+### Apache Config (Before)
+![Before](screenshots/phase3-hardening/apache_config_before.png)
 
-### Nmap Scan
-![Nmap](Screenshots/nmap-open-port.png)
+### Apache Config (After)
+![After](screenshots/phase3-hardening/apache_config_after.png)
 
-### Advanced Scan (-sC -sV)
-![Advanced Scan](Screenshots/nmap-advanced.png)
+### Remove Default Page (Verification)
+![Verify](screenshots/phase3-hardening/remove_default_page_verification.png)
 
-### Apache Web Page
-![Apache Page](Screenshots/apache-page.png)
+### Remove Default Page (Result)
+![Result](screenshots/phase3-hardening/remove_default_page_result.png)
+
+### UFW Enable
+![UFW Enable](screenshots/phase3-hardening/ufw_enable.png)
+
+### UFW Rules
+![UFW Rules](screenshots/phase3-hardening/ufw_rules.png)
+
+### UFW Status
+![UFW Status](screenshots/phase3-hardening/ufw_status.png)
 
 ---
 
-## 📚 What I Learned
+# 📊 Overall Analysis
 
-- How to set up a cybersecurity lab in VMware
-- Basics of network scanning with Nmap
-- How to identify open ports and services
-- Understanding attack surfaces
-- Importance of service exposure
+The initial assessment revealed multiple security weaknesses, including information disclosure, default configurations, and lack of protective controls.
+
+After applying hardening measures:
+- Sensitive information exposure was reduced  
+- Default content was removed  
+- Network access was restricted  
+- System security posture improved significantly  
 
 ---
 
-## ⚠️ Disclaimer
+# 📚 What I Learned
+
+- Network scanning and service detection using Nmap  
+- Web enumeration techniques and tools  
+- Identifying misconfigurations and vulnerabilities  
+- System hardening and defensive security practices  
+- Importance of reducing attack surface  
+
+---
+
+# ⚠️ Disclaimer
 
 This project was conducted in a controlled virtual lab environment for educational purposes only.
