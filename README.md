@@ -2,9 +2,9 @@
 
 ## 📌 Project Overview
 
-This project demonstrates a complete cybersecurity workflow including network scanning, web enumeration, and system hardening using a controlled VMware lab environment.
+This project demonstrates a complete cybersecurity workflow including network scanning, web enumeration, system hardening, and validation using a VMware lab environment.
 
-The objective is to identify open services, assess potential vulnerabilities, and apply security improvements to reduce the attack surface.
+The objective is to identify exposed services, assess potential vulnerabilities, apply security improvements, and verify the effectiveness of those measures.
 
 ---
 
@@ -49,8 +49,8 @@ Identify active hosts, open ports, and running services.
 - Used `-sC -sV` for service detection
 
 ## 📊 Results
-- Port **80 (HTTP)** is open
-- Service: **Apache HTTP Server 2.4.58 (Ubuntu)**
+- Port **80 (HTTP)** is open  
+- Service: **Apache HTTP Server 2.4.58 (Ubuntu)**  
 
 ## 📸 Screenshots
 
@@ -63,7 +63,7 @@ Identify active hosts, open ports, and running services.
 ### Advanced Scan (-sC -sV)
 ![Advanced Scan](screenshots/phase1-scanning/nmap-advanced.png)
 
-### Apache Web Page
+### Apache Default Page
 ![Apache](screenshots/phase1-scanning/apache-page.png)
 
 ---
@@ -74,17 +74,17 @@ Identify active hosts, open ports, and running services.
 Analyze the discovered web service for vulnerabilities and hidden resources.
 
 ## 🛠️ Tools Used
-- WhatWeb
-- Nikto
-- Gobuster
+- WhatWeb  
+- Nikto  
+- Gobuster  
 
 ## 🔎 Findings
 
-- Apache version information is exposed  
-- Default Apache page is accessible  
+- Apache version information exposed  
+- Default Apache page accessible  
 - Missing security headers (X-Frame-Options, X-Content-Type-Options)  
 - Potential information leakage via ETags  
-- Limited directory exposure, but default resources are present  
+- Presence of default and restricted directories  
 
 ## 📸 Screenshots
 
@@ -102,7 +102,7 @@ Analyze the discovered web service for vulnerabilities and hidden resources.
 # 🔐 Phase 3: System Hardening
 
 ## 🧠 Objective
-Apply security measures to reduce attack surface and improve system security.
+Reduce attack surface and improve system security.
 
 ## 🛠️ Actions Performed
 
@@ -121,9 +121,7 @@ Apply security measures to reduce attack surface and improve system security.
   - Port 80 (HTTP)
 
 ### 4. System Update
-- Updated packages to patch vulnerabilities
-
----
+- Updated system packages to patch vulnerabilities
 
 ## 📸 Screenshots
 
@@ -150,15 +148,49 @@ Apply security measures to reduce attack surface and improve system security.
 
 ---
 
+# 🔁 Phase 4: Re-Scan & Validation
+
+## 🧠 Objective
+Verify that the applied security measures improved the system’s security posture.
+
+## 🛠️ Actions Performed
+- Re-ran Nmap scan using `-Pn` (host discovery blocked by firewall)
+- Performed Nikto vulnerability scan
+- Checked HTTP headers using curl
+
+## 📊 Results
+
+After hardening:
+
+- Apache version information is no longer exposed  
+- Default Apache page has been removed  
+- Firewall prevents host discovery (ICMP blocked)  
+- Reduced information disclosure  
+
+This confirms that the system is more secure than during the initial assessment.
+
+## 📸 Screenshots
+
+### Nmap After Hardening
+![Nmap After](screenshots/phase4-rescan/nmap_after.png)
+
+### Nikto After Hardening
+![Nikto After](screenshots/phase4-rescan/nikto_after.png)
+
+### Headers After Hardening
+![Headers After](screenshots/phase4-rescan/headers_after.png)
+
+---
+
 # 📊 Overall Analysis
 
-The initial assessment revealed multiple security weaknesses, including information disclosure, default configurations, and lack of protective controls.
+The initial assessment revealed multiple weaknesses, including information disclosure, default configurations, and lack of security controls.
 
-After applying hardening measures:
-- Sensitive information exposure was reduced  
-- Default content was removed  
+After applying hardening techniques:
+- Sensitive information exposure was minimized  
+- Default configurations were removed  
 - Network access was restricted  
-- System security posture improved significantly  
+- Overall security posture significantly improved  
 
 ---
 
@@ -166,9 +198,9 @@ After applying hardening measures:
 
 - Network scanning and service detection using Nmap  
 - Web enumeration techniques and tools  
-- Identifying misconfigurations and vulnerabilities  
+- Identifying vulnerabilities and misconfigurations  
 - System hardening and defensive security practices  
-- Importance of reducing attack surface  
+- Importance of validation after security changes  
 
 ---
 
