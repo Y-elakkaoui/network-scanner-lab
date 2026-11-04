@@ -2,9 +2,9 @@
 
 ## 📌 Project Overview
 
-This project demonstrates a complete cybersecurity workflow including network scanning, web enumeration, system hardening, and validation using a VMware lab environment.
+This project documents a complete assess-harden-verify cycle in a VMware lab: network scanning, web enumeration, system hardening and a re-scan to check the result.
 
-The objective is to identify exposed services, assess potential vulnerabilities, apply security improvements, and verify the effectiveness of those measures.
+The objective is to identify exposed services, apply security improvements and measure which of them actually worked. The re-scan showed that some measures worked and others did not, and this README documents both.
 
 ---
 
@@ -106,10 +106,15 @@ Reduce attack surface and improve system security.
 
 ## 🛠️ Actions Performed
 
-### 1. Apache Hardening
-- Disabled version disclosure:
-  - `ServerTokens Prod`
-  - `ServerSignature Off`
+### 1. Apache Configuration
+Edited `/etc/apache2/conf-available/security.conf` to hide version information. The file ended up with these two lines:
+
+```apache
+ServerTokens Prod
+ServerTokens off
+```
+
+The second line was meant to be `ServerSignature Off`. See Phase 4 for the effect.
 
 ### 2. Removed Default Page
 - Deleted `/var/www/html/index.html`
@@ -151,23 +156,28 @@ Reduce attack surface and improve system security.
 # 🔁 Phase 4: Re-Scan & Validation
 
 ## 🧠 Objective
-Verify that the applied security measures improved the system’s security posture.
+Verify whether the applied security measures improved the system's security posture.
 
 ## 🛠️ Actions Performed
-- Re-ran Nmap scan using `-Pn` (host discovery blocked by firewall)
-- Performed Nikto vulnerability scan
-- Checked HTTP headers using curl
+- Re-ran the Nmap scan with `-sC -sV`
+- Performed a Nikto vulnerability scan
+- Checked HTTP headers using `curl -I`
 
 ## 📊 Results
 
-After hardening:
+**What worked**
 
-- Apache version information is no longer exposed  
-- Default Apache page has been removed  
-- Firewall prevents host discovery (ICMP blocked)  
-- Reduced information disclosure  
+- The firewall is active: Nmap now reports 998 filtered TCP ports
+- The default Apache page is gone
 
-This confirms that the system is more secure than during the initial assessment.
+**What did not work**
+
+| Finding | Evidence | Cause |
+| :--- | :--- | :--- |
+| Apache version is still exposed | `Server: Apache/2.4.58 (Ubuntu)` in `curl -I`, Nmap and Nikto | The later `ServerTokens off` line overrides `ServerTokens Prod`, and `off` is not a valid value, so Apache falls back to its default (`Full`) |
+| Version still appears in the page footer | Footer of the `Index of /` page | `ServerSignature Off` was never set |
+| New issue: directory listing | Browser shows `Index of /`, Nikto reports directory indexing | Removing `index.html` left the directory without an index page, and `Indexes` is enabled |
+| Security headers still missing | Nikto: no X-Frame-Options, no X-Content-Type-Options | Not addressed in this run |
 
 ## 📸 Screenshots
 
@@ -184,13 +194,34 @@ This confirms that the system is more secure than during the initial assessment.
 
 # 📊 Overall Analysis
 
-The initial assessment revealed multiple weaknesses, including information disclosure, default configurations, and lack of security controls.
+The firewall reduced the network exposure and the default page was removed. The information disclosure remained because of a single wrong line in the configuration, and removing the default page introduced a directory listing.
 
-After applying hardening techniques:
-- Sensitive information exposure was minimized  
-- Default configurations were removed  
-- Network access was restricted  
-- Overall security posture significantly improved  
+Without the re-scan, the hardening would have looked complete.
+
+---
+
+# ➡️ Next Run
+
+Planned fixes for the next run, followed by the same re-scan:
+
+```apache
+# /etc/apache2/conf-available/security.conf
+ServerTokens Prod
+ServerSignature Off
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-Content-Type-Options "nosniff"
+```
+
+```apache
+# Apache configuration for /var/www/
+Options -Indexes
+```
+
+```bash
+sudo a2enmod headers
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+```
 
 ---
 
@@ -200,7 +231,8 @@ After applying hardening techniques:
 - Web enumeration techniques and tools  
 - Identifying vulnerabilities and misconfigurations  
 - System hardening and defensive security practices  
-- Importance of validation after security changes  
+- A hardening step is only finished once a re-scan confirms it  
+- A fix can create a new finding, as the removed default page did  
 
 ---
 
