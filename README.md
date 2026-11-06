@@ -1,208 +1,181 @@
-# 🔐 Network Scanner Lab (VMware Cybersecurity Project)
+# Network Assessment and Hardening Lab
 
-## 📌 Project Overview
+A full assess, harden and verify cycle in an isolated VMware network: scanning and enumerating an Ubuntu web server from Kali Linux, hardening it, then scanning again to measure which measures actually worked.
 
-This project documents a complete assess-harden-verify cycle in a VMware lab: network scanning, web enumeration, system hardening and a re-scan to check the result.
+> **Status:** One cycle completed. The firewall works and the default page is gone. The Apache version is still exposed because of one wrong configuration line, and removing the default page introduced a directory listing. Both are planned for the next run.
 
-The objective is to identify exposed services, apply security improvements and measure which of them actually worked. The re-scan showed that some measures worked and others did not, and this README documents both.
+> **Kurzfassung (DE):** Ein kompletter Durchlauf im isolierten VMware-Netz: Ubuntu-Webserver von Kali aus prüfen, härten und danach erneut messen. Der Re-Scan zeigt 998 gefilterte Ports, die Standardseite ist weg. Offen sind die weiterhin sichtbare Apache-Version, ein neues Verzeichnislisting und fehlende Security-Header.
 
----
+![Nmap scan after hardening](screenshots/phase4-rescan/nmap_after.png)
 
-## 🖥️ Lab Setup
+## Lab environment
 
-- **Attacker Machine:** Kali Linux  
-- **Target Machine:** Ubuntu Desktop  
-- **Platform:** VMware Workstation  
-- **Network Type:** Host-only (isolated lab)  
+| Component | Details |
+|---|---|
+| Attacker | Kali Linux, 192.168.38.131 |
+| Target | Ubuntu Desktop with Apache2, 192.168.38.129 |
+| Platform | VMware Workstation |
+| Network | Host-only (isolated) |
 
----
+**Tools:** Nmap, WhatWeb, Nikto, Gobuster, Apache2, UFW
 
-## 🌐 Network Configuration
+## Results at a glance
 
-- Kali Linux IP: 192.168.38.131  
-- Target IP: 192.168.38.129  
+| Phase | Activity | Outcome |
+|---|---|---|
+| 1. Scanning | Ping and Nmap (`-sC -sV`) | Port 80 open, Apache 2.4.58 (Ubuntu) identified |
+| 2. Enumeration | WhatWeb, Nikto, Gobuster | Version disclosure, default page, missing security headers |
+| 3. Hardening | Apache configuration, default page removed, UFW enabled, system updated | Applied |
+| 4. Re-scan | Nmap, Nikto, `curl -I` | Partly effective, see [Phase 4](#phase-4-re-scan-and-validation) |
 
-Both systems are connected within the same internal network.
+## Phase 1: Network scanning
 
----
+**Objective:** Identify active hosts, open ports and running services.
 
-## 🔧 Tools Used
+- Verified connectivity with `ping`
+- Scanned with Nmap, using `-sC -sV` for service detection
 
-- Nmap  
-- WhatWeb  
-- Nikto  
-- Gobuster  
-- Apache2  
-- UFW (Firewall)  
-- Kali Linux  
+**Result:** Port 80 (HTTP) is open, running Apache HTTP Server 2.4.58 (Ubuntu).
 
----
+<details>
+<summary>Screenshots</summary>
 
-# 🔍 Phase 1: Network Scanning
+### Ping test
 
-## 🧠 Objective
-Identify active hosts, open ports, and running services.
+![Ping test](screenshots/phase1-scanning/ping.png)
 
-## 🛠️ Actions Performed
-- Verified connectivity using `ping`
-- Performed Nmap scan
-- Used `-sC -sV` for service detection
+### Nmap scan
 
-## 📊 Results
-- Port **80 (HTTP)** is open  
-- Service: **Apache HTTP Server 2.4.58 (Ubuntu)**  
+![Nmap scan](screenshots/phase1-scanning/nmap-open-port.png)
 
-## 📸 Screenshots
+### Service detection (-sC -sV)
 
-### Ping Test
-![Ping](screenshots/phase1-scanning/ping.png)
+![Nmap service detection](screenshots/phase1-scanning/nmap-advanced.png)
 
-### Nmap Scan
-![Nmap](screenshots/phase1-scanning/nmap-open-port.png)
+### Apache default page
 
-### Advanced Scan (-sC -sV)
-![Advanced Scan](screenshots/phase1-scanning/nmap-advanced.png)
+![Apache default page](screenshots/phase1-scanning/apache-page.png)
 
-### Apache Default Page
-![Apache](screenshots/phase1-scanning/apache-page.png)
+</details>
 
----
+## Phase 2: Web enumeration
 
-# 🔍 Phase 2: Web Enumeration
+**Objective:** Analyse the web service for weaknesses and hidden resources, using WhatWeb, Nikto and Gobuster.
 
-## 🧠 Objective
-Analyze the discovered web service for vulnerabilities and hidden resources.
+**Findings:**
 
-## 🛠️ Tools Used
-- WhatWeb  
-- Nikto  
-- Gobuster  
+- Apache version information exposed
+- Default Apache page accessible
+- Missing security headers (X-Frame-Options, X-Content-Type-Options)
+- Potential information leakage through ETags
+- Default and restricted directories present
 
-## 🔎 Findings
+<details>
+<summary>Screenshots</summary>
 
-- Apache version information exposed  
-- Default Apache page accessible  
-- Missing security headers (X-Frame-Options, X-Content-Type-Options)  
-- Potential information leakage via ETags  
-- Presence of default and restricted directories  
+### WhatWeb
 
-## 📸 Screenshots
+![WhatWeb scan](screenshots/phase2-enumeration/whatweb_scan.png)
 
-### WhatWeb Scan
-![WhatWeb](screenshots/phase2-enumeration/whatweb_scan.png)
+### Nikto
 
-### Nikto Scan
-![Nikto](screenshots/phase2-enumeration/nikto_scan.png)
+![Nikto scan](screenshots/phase2-enumeration/nikto_scan.png)
 
-### Gobuster Scan
-![Gobuster](screenshots/phase2-enumeration/gobuster_scan.png)
+### Gobuster
 
----
+![Gobuster scan](screenshots/phase2-enumeration/gobuster_scan.png)
 
-# 🔐 Phase 3: System Hardening
+</details>
 
-## 🧠 Objective
-Reduce attack surface and improve system security.
+## Phase 3: System hardening
 
-## 🛠️ Actions Performed
+**Objective:** Reduce the attack surface.
 
-### 1. Apache Configuration
-Edited `/etc/apache2/conf-available/security.conf` to hide version information. The file ended up with these two lines:
+1. **Apache configuration:** Edited `/etc/apache2/conf-available/security.conf` to hide version information. The file ended up with these two lines:
 
-```apache
-ServerTokens Prod
-ServerTokens off
-```
+   ```apache
+   ServerTokens Prod
+   ServerTokens off
+   ```
 
-The second line was meant to be `ServerSignature Off`. See Phase 4 for the effect.
+   The second line was meant to be `ServerSignature Off`. Phase 4 shows the effect.
+2. **Default page:** Deleted `/var/www/html/index.html`.
+3. **Firewall:** Enabled UFW and allowed only port 22 (SSH) and port 80 (HTTP).
+4. **Updates:** Updated the system packages.
 
-### 2. Removed Default Page
-- Deleted `/var/www/html/index.html`
+<details>
+<summary>Screenshots</summary>
 
-### 3. Firewall Configuration
-- Enabled UFW
-- Allowed only:
-  - Port 22 (SSH)
-  - Port 80 (HTTP)
+### Apache configuration before
 
-### 4. System Update
-- Updated system packages to patch vulnerabilities
+![Apache configuration before](screenshots/phase3-hardening/apache_config_before.png)
 
-## 📸 Screenshots
+### Apache configuration after
 
-### Apache Config (Before)
-![Before](screenshots/phase3-hardening/apache_config_before.png)
+![Apache configuration after](screenshots/phase3-hardening/apache_config_after.png)
 
-### Apache Config (After)
-![After](screenshots/phase3-hardening/apache_config_after.png)
+### Default page removal: verification
 
-### Remove Default Page (Verification)
-![Verify](screenshots/phase3-hardening/remove_default_page_verification.png)
+![Default page removal verification](screenshots/phase3-hardening/remove_default_page_verification.png)
 
-### Remove Default Page (Result)
-![Result](screenshots/phase3-hardening/remove_default_page_result.png)
+### Default page removal: result
 
-### UFW Enable
-![UFW Enable](screenshots/phase3-hardening/ufw_enable.png)
+![Default page removal result](screenshots/phase3-hardening/remove_default_page_result.png)
 
-### UFW Rules
-![UFW Rules](screenshots/phase3-hardening/ufw_rules.png)
+### UFW enabled
 
-### UFW Status
-![UFW Status](screenshots/phase3-hardening/ufw_status.png)
+![UFW enabled](screenshots/phase3-hardening/ufw_enable.png)
 
----
+### UFW rules
 
-# 🔁 Phase 4: Re-Scan & Validation
+![UFW rules](screenshots/phase3-hardening/ufw_rules.png)
 
-## 🧠 Objective
-Verify whether the applied security measures improved the system's security posture.
+### UFW status
 
-## 🛠️ Actions Performed
-- Re-ran the Nmap scan with `-sC -sV`
-- Performed a Nikto vulnerability scan
-- Checked HTTP headers using `curl -I`
+![UFW status](screenshots/phase3-hardening/ufw_status.png)
 
-## 📊 Results
+</details>
 
-**What worked**
+## Phase 4: Re-scan and validation
+
+**Objective:** Verify whether the applied measures improved the security posture, by repeating the Nmap scan (`-sC -sV`), running Nikto and checking the HTTP headers with `curl -I`.
+
+**Effective:**
 
 - The firewall is active: Nmap now reports 998 filtered TCP ports
 - The default Apache page is gone
 
-**What did not work**
+**Not effective:**
 
 | Finding | Evidence | Cause |
-| :--- | :--- | :--- |
-| Apache version is still exposed | `Server: Apache/2.4.58 (Ubuntu)` in `curl -I`, Nmap and Nikto | The later `ServerTokens off` line overrides `ServerTokens Prod`, and `off` is not a valid value, so Apache falls back to its default (`Full`) |
-| Version still appears in the page footer | Footer of the `Index of /` page | `ServerSignature Off` was never set |
+|---|---|---|
+| Apache version still exposed | `Server: Apache/2.4.58 (Ubuntu)` in `curl -I`, Nmap and Nikto | The later `ServerTokens off` line overrides `ServerTokens Prod`. `off` is not a valid value, so Apache falls back to its default (`Full`) |
+| Version still shown in the page footer | Footer of the `Index of /` page | `ServerSignature Off` was never set |
 | New issue: directory listing | Browser shows `Index of /`, Nikto reports directory indexing | Removing `index.html` left the directory without an index page, and `Indexes` is enabled |
 | Security headers still missing | Nikto: no X-Frame-Options, no X-Content-Type-Options | Not addressed in this run |
 
-## 📸 Screenshots
+<details>
+<summary>Screenshots</summary>
 
-### Nmap After Hardening
-![Nmap After](screenshots/phase4-rescan/nmap_after.png)
+### Nikto after hardening
 
-### Nikto After Hardening
-![Nikto After](screenshots/phase4-rescan/nikto_after.png)
+![Nikto after hardening](screenshots/phase4-rescan/nikto_after.png)
 
-### Headers After Hardening
-![Headers After](screenshots/phase4-rescan/headers_after.png)
+### HTTP headers after hardening
 
----
+![HTTP headers after hardening](screenshots/phase4-rescan/headers_after.png)
 
-# 📊 Overall Analysis
+</details>
 
-The firewall reduced the network exposure and the default page was removed. The information disclosure remained because of a single wrong line in the configuration, and removing the default page introduced a directory listing.
+## Analysis
+
+The firewall reduced the network exposure and the default page was removed. The information disclosure remained because of a single wrong configuration line, and removing the default page introduced a directory listing.
 
 Without the re-scan, the hardening would have looked complete.
 
----
+## Next run
 
-# ➡️ Next Run
-
-Planned fixes for the next run, followed by the same re-scan:
+Planned fixes, followed by the same re-scan:
 
 ```apache
 # /etc/apache2/conf-available/security.conf
@@ -223,19 +196,11 @@ sudo apache2ctl configtest
 sudo systemctl reload apache2
 ```
 
----
+## Key takeaways
 
-# 📚 What I Learned
+- A hardening step is only finished once a re-scan confirms it.
+- A fix can create a new finding, as the removed default page did.
 
-- Network scanning and service detection using Nmap  
-- Web enumeration techniques and tools  
-- Identifying vulnerabilities and misconfigurations  
-- System hardening and defensive security practices  
-- A hardening step is only finished once a re-scan confirms it  
-- A fix can create a new finding, as the removed default page did  
+## Disclaimer
 
----
-
-# ⚠️ Disclaimer
-
-This project was conducted in a controlled virtual lab environment for educational purposes only.
+This project was carried out in a controlled virtual lab environment for educational purposes only.
