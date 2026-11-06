@@ -19,10 +19,18 @@ docker network create retest >/dev/null
 docker build -q -t retest-scanner -f Dockerfile.scanner . >/dev/null
 SCAN="docker run --rm --network retest retest-scanner"
 
+docker build -q -t retest-web . >/dev/null
 for state in before after; do
-  docker build -q --build-arg CONF=$state.conf -t retest-web-$state . >/dev/null
-  docker run -d --name web-$state --network retest retest-web-$state >/dev/null
+  # Start with Ubuntu's default configuration, then apply the edit and reload,
+  # exactly as an administrator would on the running server.
+  docker run -d --name web-$state --network retest retest-web >/dev/null
   sleep 5
+  docker cp $state.conf web-$state:/etc/apache2/conf-available/security.conf
+  docker exec web-$state apache2ctl configtest > evidence/$state-configtest.txt 2>&1
+  echo "configtest exit code: $?" >> evidence/$state-configtest.txt
+  docker exec web-$state apache2ctl graceful > evidence/$state-reload.txt 2>&1
+  echo "reload exit code: $?" >> evidence/$state-reload.txt
+  sleep 3
   $SCAN curl -sI http://web-$state/ | tee evidence/$state-headers.txt
   $SCAN curl -s  http://web-$state/ > evidence/$state-body.html
   $SCAN nmap -sC -sV -p 80 web-$state | tee evidence/$state-nmap.txt
@@ -31,12 +39,17 @@ done
 
 {
   echo "== Original configuration: the documented findings should reproduce"
-  check "Server header shows the full Apache version" grep -qE '^Server: Apache/2\.4\.[0-9]+ \(Ubuntu\)' evidence/before-headers.txt
+  check "Apache rejects the 'ServerTokens off' line"  grep -q 'configtest exit code: 1' evidence/before-configtest.txt
+  check "The reload fails too"                        grep -qE 'reload exit code: [1-9]' evidence/before-reload.txt
+  check "Apache keeps serving: old config still active" grep -qE '^HTTP/1.1 200' evidence/before-headers.txt
+  check "Server header shows Apache/2.4.x (Ubuntu)"   grep -qE '^Server: Apache/2\.4\.[0-9]+ \(Ubuntu\)' evidence/before-headers.txt
   check "Directory listing is shown"                  grep -q 'Index of /' evidence/before-body.html
   check "Version appears in the page footer"          grep -q '<address>Apache/2' evidence/before-body.html
   check_not "X-Frame-Options is absent"               grep -qi '^X-Frame-Options' evidence/before-headers.txt
   echo
   echo "== Corrected configuration: the findings should be gone"
+  check "Apache accepts the corrected configuration"  grep -q 'configtest exit code: 0' evidence/after-configtest.txt
+  check_not "Nikto no longer reports the TRACE method" grep -q 'TRACE method is active' evidence/after-nikto.txt
   check "Server header no longer shows a version"     grep -qE '^Server: Apache.?$' evidence/after-headers.txt
   check_not "Nmap no longer reports the version in the server header" grep -q 'Apache/2' evidence/after-nmap.txt
   check "Directory listing is refused (403)"          grep -q '^HTTP/1.1 403' evidence/after-headers.txt
