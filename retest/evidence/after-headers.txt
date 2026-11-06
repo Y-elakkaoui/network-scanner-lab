@@ -1,0 +1,7 @@
+HTTP/1.1 403 Forbidden
+Date: Fri, 06 Nov 2026 16:13:37 GMT
+Server: Apache
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+Content-Type: text/html; charset=iso-8859-1
+

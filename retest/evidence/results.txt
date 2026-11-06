@@ -1,0 +1,21 @@
+== Original configuration: the documented findings should reproduce
+PASS  Apache rejects the 'ServerTokens off' line
+PASS  The reload fails too
+PASS  Apache keeps serving: old config still active
+PASS  Server header shows Apache/2.4.x (Ubuntu)
+PASS  Directory listing is shown
+PASS  Version appears in the page footer
+PASS  X-Frame-Options is absent
+
+== Corrected configuration: the findings should be gone
+PASS  Apache accepts the corrected configuration
+PASS  Nikto no longer reports the TRACE method
+PASS  Server header no longer shows a version
+PASS  Nmap no longer reports the version in the server header
+PASS  Directory listing is refused (403)
+PASS  No directory listing in the body
+PASS  No version in the page footer
+PASS  X-Frame-Options is set
+PASS  X-Content-Type-Options is set
+
+Result: 16 passed, 0 failed

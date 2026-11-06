@@ -1,0 +1,17 @@
+- Nikto v2.1.5
+---------------------------------------------------------------------------
++ ERROR: Host maximum execution time of 120 seconds reached
++ Target IP:          172.18.0.3
++ Target Hostname:    web-after
++ Target Port:        80
++ Start Time:         2026-11-06 16:13:45 (GMT0)
+---------------------------------------------------------------------------
++ Server: Apache
++ Uncommon header 'x-content-type-options' found, with contents: nosniff
++ Uncommon header 'x-frame-options' found, with contents: SAMEORIGIN
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ Allowed HTTP Methods: GET, POST, OPTIONS, HEAD 
++ 6544 items checked: 0 error(s) and 3 item(s) reported on remote host
++ End Time:           2026-11-06 16:13:49 (GMT0) (4 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested

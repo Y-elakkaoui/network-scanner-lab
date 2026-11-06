@@ -2,9 +2,9 @@
 
 A full assess, harden and verify cycle in an isolated VMware network: scanning and enumerating an Ubuntu web server from Kali Linux, hardening it, then scanning again to measure which measures actually worked.
 
-> **Status:** One cycle completed. The firewall works and the default page is gone. The Apache version is still exposed because of one wrong configuration line, and removing the default page introduced a directory listing. Both are planned for the next run.
+> **Status:** One cycle completed on the VMware lab: the firewall works and the default page is gone, but the Apache version stayed exposed and a directory listing appeared. The corrected configuration then passed an automated [retest](#retest) in Docker. It has not been repeated on the original VM.
 
-> **Kurzfassung (DE):** Ein kompletter Durchlauf im isolierten VMware-Netz: Ubuntu-Webserver von Kali aus prüfen, härten und danach erneut messen. Der Re-Scan zeigt 998 gefilterte Ports, die Standardseite ist weg. Offen sind die weiterhin sichtbare Apache-Version, ein neues Verzeichnislisting und fehlende Security-Header.
+> **Kurzfassung (DE):** Ein kompletter Durchlauf im isolierten VMware-Netz: Ubuntu-Webserver von Kali aus prüfen, härten und danach erneut messen. Der Re-Scan zeigt 998 gefilterte Ports, die Standardseite ist weg, aber die Apache-Version blieb sichtbar und ein Verzeichnislisting kam hinzu. Die korrigierte Konfiguration hat einen automatisierten Nachtest in Docker bestanden, auf der ursprünglichen VM steht die Wiederholung noch aus.
 
 ![Nmap scan after hardening](screenshots/phase4-rescan/nmap_after.png)
 
@@ -149,7 +149,7 @@ A full assess, harden and verify cycle in an isolated VMware network: scanning a
 
 | Finding | Evidence | Cause |
 |---|---|---|
-| Apache version still exposed | `Server: Apache/2.4.58 (Ubuntu)` in `curl -I`, Nmap and Nikto | The later `ServerTokens off` line overrides `ServerTokens Prod`. `off` is not a valid value, so Apache falls back to its default (`Full`) |
+| Apache version still exposed | `Server: Apache/2.4.58 (Ubuntu)` in `curl -I`, Nmap and Nikto | Apache rejects `ServerTokens off` as a syntax error, so a reload fails and the previous configuration stays active. Reproduced in the [retest](#retest), not confirmed on the original VM |
 | Version still shown in the page footer | Footer of the `Index of /` page | `ServerSignature Off` was never set |
 | New issue: directory listing | Browser shows `Index of /`, Nikto reports directory indexing | Removing `index.html` left the directory without an index page, and `Indexes` is enabled |
 | Security headers still missing | Nikto: no X-Frame-Options, no X-Content-Type-Options | Not addressed in this run |
@@ -169,37 +169,57 @@ A full assess, harden and verify cycle in an isolated VMware network: scanning a
 
 ## Analysis
 
-The firewall reduced the network exposure and the default page was removed. The information disclosure remained because of a single wrong configuration line, and removing the default page introduced a directory listing.
+The firewall reduced the network exposure and the default page was removed. The information disclosure remained because of a single invalid configuration line, most likely because Apache refused to load the edited file, and removing the default page introduced a directory listing.
 
 Without the re-scan, the hardening would have looked complete.
 
-## Next run
+## Retest
 
-Planned fixes, followed by the same re-scan:
+An automated retest on GitHub Actions starts Apache 2.4.58 on Ubuntu 24.04 in Docker, applies each configuration with a reload and scans it from a second container.
+
+**Correction:** An earlier version of this README said Apache falls back to `ServerTokens Full`. The retest shows that this was wrong: Apache rejects the line.
+
+```text
+AH00526: Syntax error on line 3 of /etc/apache2/conf-enabled/security.conf:
+ServerTokens takes 1 argument: 'Prod(uctOnly)', 'Major', 'Minor', 'Min(imal)', 'OS', or 'Full'
+```
+
+| Check | Original configuration | Corrected configuration |
+|---|---|---|
+| `apache2ctl configtest` | Syntax error | Syntax OK |
+| Server header | `Apache/2.4.58 (Ubuntu)` | `Apache` |
+| Request for `/` | `200`, `Index of /` | `403` |
+| Version in the page footer | Yes | No |
+| X-Frame-Options, X-Content-Type-Options | Missing | Set |
+
+The corrected configuration:
 
 ```apache
-# /etc/apache2/conf-available/security.conf
 ServerTokens Prod
 ServerSignature Off
-Header set X-Frame-Options "SAMEORIGIN"
-Header set X-Content-Type-Options "nosniff"
+TraceEnable Off
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-Content-Type-Options "nosniff"
+
+<Directory /var/www/>
+    Options -Indexes
+</Directory>
 ```
 
-```apache
-# Apache configuration for /var/www/
-Options -Indexes
-```
+All 16 checks passed. See the [results](retest/evidence/results.txt), [evidence](retest/evidence/) and [workflow](.github/workflows/retest.yml).
 
-```bash
-sudo a2enmod headers
-sudo apache2ctl configtest
-sudo systemctl reload apache2
-```
+**Limits:**
+
+- This is a rebuild in Docker, not the original VM, so the fix still has to be repeated there.
+- UFW was not part of the retest.
+- Nikto stopped at its 120-second limit, so its scan is not complete.
+- The retest was built and run with AI assistance (Claude).
 
 ## Key takeaways
 
 - A hardening step is only finished once a re-scan confirms it.
 - A fix can create a new finding, as the removed default page did.
+- `apache2ctl configtest` belongs before every reload. It would have shown the error immediately.
 
 ## Disclaimer
 

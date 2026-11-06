@@ -1,0 +1,13 @@
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-11-06 16:13 UTC
+Nmap scan report for web-after (172.18.0.3)
+Host is up (0.000036s latency).
+rDNS record for 172.18.0.3: web-after.retest
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd
+|_http-title: 403 Forbidden
+|_http-server-header: Apache
+MAC Address: D6:76:F5:BC:50:A6 (Unknown)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 6.33 seconds

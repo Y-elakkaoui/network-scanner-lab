@@ -1,0 +1,47 @@
+- Nikto v2.1.5
+---------------------------------------------------------------------------
++ ERROR: Host maximum execution time of 120 seconds reached
++ Target IP:          172.18.0.2
++ Target Hostname:    web-before
++ Target Port:        80
++ Start Time:         2026-11-06 16:13:24 (GMT0)
+---------------------------------------------------------------------------
++ Server: Apache/2.4.58 (Ubuntu)
++ The anti-clickjacking X-Frame-Options header is not present.
++ OSVDB-3268: /: Directory indexing found.
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ Allowed HTTP Methods: POST, OPTIONS, HEAD, GET 
++ OSVDB-3268: /./: Directory indexing found.
++ OSVDB-3268: /?mod=node&nid=some_thing&op=view: Directory indexing found.
++ OSVDB-3268: /?mod=some_thing&op=browse: Directory indexing found.
++ /./: Appending '/./' to a directory allows indexing
++ OSVDB-3268: //: Directory indexing found.
++ //: Apache on Red Hat Linux release 9 reveals the root directory listing by default if there is no index page.
++ OSVDB-3268: /?Open: Directory indexing found.
++ OSVDB-3268: /?OpenServer: Directory indexing found.
++ OSVDB-3268: /%2e/: Directory indexing found.
++ OSVDB-576: /%2e/: Weblogic allows source code or directory listing, upgrade to v6.0 SP1 or higher. http://www.securityfocus.com/bid/2513.
++ OSVDB-3268: /?mod=<script>alert(document.cookie)</script>&op=browse: Directory indexing found.
++ OSVDB-3268: /?sql_debug=1: Directory indexing found.
++ OSVDB-3268: ///: Directory indexing found.
++ OSVDB-3268: /?PageServices: Directory indexing found.
++ OSVDB-119: /?PageServices: The remote server may allow directory listings through Web Publisher by forcing the server to show all files via 'open directory browsing'. Web Publisher should be disabled. CVE-1999-0269.
++ OSVDB-3268: /?wp-cs-dump: Directory indexing found.
++ OSVDB-119: /?wp-cs-dump: The remote server may allow directory listings through Web Publisher by forcing the server to show all files via 'open directory browsing'. Web Publisher should be disabled. CVE-1999-0269.
++ OSVDB-3268: ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////: Directory indexing found.
++ OSVDB-3288: ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////: Abyss 1.03 reveals directory listing when 	 /'s are requested.
++ OSVDB-3268: /?pattern=/etc/*&sort=name: Directory indexing found.
++ OSVDB-3268: /?D=A: Directory indexing found.
++ OSVDB-3268: /?N=D: Directory indexing found.
++ OSVDB-3268: /?S=A: Directory indexing found.
++ OSVDB-3268: /?M=A: Directory indexing found.
++ OSVDB-3268: /?\"><script>alert('Vulnerable');</script>: Directory indexing found.
++ OSVDB-3268: /?_CONFIG[files][functions_page]=http://cirt.net/rfiinc.txt?: Directory indexing found.
++ OSVDB-3268: /?npage=-1&content_dir=http://cirt.net/rfiinc.txt?%00&cmd=ls: Directory indexing found.
++ OSVDB-3268: /?npage=1&content_dir=http://cirt.net/rfiinc.txt?%00&cmd=ls: Directory indexing found.
++ OSVDB-3268: /?show=http://cirt.net/rfiinc.txt??: Directory indexing found.
++ OSVDB-3268: /?-s: Directory indexing found.
++ 6544 items checked: 0 error(s) and 33 item(s) reported on remote host
++ End Time:           2026-11-06 16:13:29 (GMT0) (5 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
